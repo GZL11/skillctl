@@ -1,0 +1,45 @@
+{
+  "name": "skillctl",
+  "version": "0.1.0",
+  "description": "Package manager for Claude Code skills — search, install, update, deduplicate, merge, and clean.",
+  "author": "GZL11",
+  "homepage": "https://github.com/GZL11/skillctl",
+  "license": "MIT",
+  "skills": [
+    "skillctl"
+  ],
+  "commands": [
+    "slm-search",
+    "slm-install",
+    "slm-update",
+    "slm-merge",
+    "slm-list",
+    "slm-status",
+    "slm-clean"
+  ],
+  "agents": [
+    "skill-merger",
+    "skill-auditor"
+  ],
+  "scripts": [
+    "registry.py",
+    "bootstrap.py",
+    "search.py",
+    "similarity.py",
+    "install.sh",
+    "update.sh",
+    "clean.sh"
+  ],
+  "dependencies": {
+    "python": ">=3.8",
+    "git": ">=2.0"
+  },
+  "keywords": [
+    "claude-code",
+    "skill-management",
+    "lifecycle",
+    "registry",
+    "duplicate-detection",
+    "skill-merging"
+  ]
+}
