@@ -32,17 +32,55 @@ Check the SLM registry at `skillctl/data/registry.json`:
 - If missing, suggest running bootstrap: `python3 skillctl/scripts/bootstrap.py`
 - Cross-reference registry entries with actual files on disk
 
-### 2. Duplicate Detection
+### 2. Duplicate Detection (Progressive Disclosure)
 
-Run TF-IDF similarity analysis:
-```bash
-python3 skillctl/scripts/similarity.py --skills-dir ~/.claude/skills --threshold 0.5
+Use a 3-layer progressive approach. Stop at the earliest layer that gives a confident answer for each group.
+
+#### Layer 1 — Name Scan
+
+List all skill directory names under `~/.claude/skills/` using Glob:
+```
+~/.claude/skills/*/SKILL.md
 ```
 
-Categorize results:
-- **Critical** (>=0.9): Near-identical skills, strong merge recommendation
-- **Warning** (>=0.7): Likely duplicates, suggest review
-- **Info** (>=0.5): Possible overlap, note for awareness
+Analyze the names:
+- Group names sharing significant tokens (e.g., `finish-release` / `start-release` / `finish-feature`)
+- Identify prefix/suffix families (e.g., `scientific-*`, `baoyu-*`)
+- Skills with clearly distinct names → **Dismiss** immediately
+
+#### Layer 2 — Frontmatter Comparison
+
+For each suspect group from Layer 1, read only the first 10 lines of each SKILL.md (the YAML frontmatter):
+- Compare `description` fields — do they describe the same use case?
+- Compare `tags` — significant overlap?
+- Same trigger phrases in description?
+
+Judgment:
+- Descriptions match same use case → **Likely Duplicate**
+- Clearly different despite similar names → **Dismiss**
+- Ambiguous → proceed to **Layer 3**
+
+#### Layer 3 — Full Content Deep Dive
+
+Only for pairs still uncertain after Layer 2. Read the complete SKILL.md for both skills and compare:
+1. Core workflow steps — do they prescribe the same actions?
+2. Trigger phrases — would the same user request activate both?
+3. Referenced scripts/tools — do they call the same external tools?
+4. Section structure — same headings and organization?
+
+Final judgment:
+- **True Duplicate**: Same purpose and workflow → Recommend `/slm-merge`
+- **Functional Overlap**: Partial overlap, each has unique value → Suggest review
+- **False Positive**: Different purposes → Dismiss
+
+#### Algorithm Cross-check
+
+After the progressive LLM analysis, run the algorithm as a safety net:
+```bash
+python3 skillctl/scripts/similarity.py --skills-dir ~/.claude/skills --threshold 0.5 --json
+```
+
+Check if the algorithm found any pairs your analysis missed. If so, run Layer 2-3 on those pairs.
 
 ### 3. Quality Assessment
 
@@ -92,12 +130,15 @@ Total Skills: N
 
 ## Health Summary
 - Registry: OK / Issues Found
-- Duplicates: N pairs detected
+- Duplicates: N pairs detected (Layer reached: 1/2/3)
 - Quality: N skills below threshold
 - Orphans: N found
 
 ## Duplicate Pairs (by severity)
-[Table of duplicate pairs]
+| Judgment           | Skill A        | Skill B        | Explanation                    |
+|--------------------|----------------|----------------|--------------------------------|
+| True Duplicate     | skill-x        | skill-y        | Both handle git release flow   |
+| Functional Overlap | skill-a        | skill-b        | Shared code review, diff scope |
 
 ## Quality Issues
 [List of skills with quality problems]

@@ -25,7 +25,7 @@ When you use Claude Code extensively, skills accumulate from multiple sources �
 |---------|-------------|
 | **Centralized Registry** | Track every skill's source, version, content hash, and category |
 | **Bootstrap Scan** | Auto-detect 100+ existing skills and build the registry |
-| **Duplicate Detection** | TF-IDF similarity analysis identifies overlapping skills |
+| **Duplicate Detection** | Multi-signal similarity (TF-IDF + frontmatter + structure + name) identifies overlapping skills |
 | **GitHub Search** | Find new skills on GitHub directly from Claude Code |
 | **Install & Update** | One-command install from GitHub with version tracking |
 | **Intelligent Merge** | LLM-powered semantic merging of similar skills |
@@ -209,7 +209,7 @@ skillctl/
 │   ├── registry.py              # Registry CRUD operations
 │   ├── bootstrap.py             # Initial skill scan
 │   ├── search.py                # GitHub + local search
-│   ├── similarity.py            # TF-IDF duplicate detection
+│   ├── similarity.py            # Multi-signal duplicate detection
 │   ├── install.sh               # Git clone & install
 │   ├── update.sh                # Version update
 │   └── clean.sh                 # Disable & cleanup

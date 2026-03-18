@@ -58,9 +58,13 @@ Refer to `references/registry-schema.md` for the complete JSON schema.
 ### Monitor and Maintain
 
 1. Run `/slm-status` to check registry health
-2. View duplicate detection results (TF-IDF similarity analysis)
-3. Identify orphaned skills (on disk but not in registry)
-4. Check for available updates on GitHub-sourced skills
+2. Duplicate detection uses progressive disclosure (3 layers):
+   - Layer 1: Name scan — group skills by shared name tokens (~500 tokens)
+   - Layer 2: Frontmatter comparison — read description/tags for suspect groups (~2000 tokens)
+   - Layer 3: Full content deep dive — only for uncertain pairs (on-demand)
+3. Algorithm cross-check (`similarity.py`) catches any pairs LLM analysis missed
+4. Identify orphaned skills (on disk but not in registry)
+5. Check for available updates on GitHub-sourced skills
 
 ### Update
 
@@ -94,7 +98,7 @@ All scripts use Python stdlib only (zero external dependencies):
 | `registry.py` | Registry CRUD operations (add, remove, update, list, stats) |
 | `bootstrap.py` | Initial scan and registry generation |
 | `search.py` | GitHub API + local registry search |
-| `similarity.py` | TF-IDF duplicate detection |
+| `similarity.py` | Multi-signal duplicate detection |
 | `install.sh` | Git clone and install from GitHub |
 | `update.sh` | Check and apply updates |
 | `clean.sh` | Disable and move skills |
