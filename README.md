@@ -122,6 +122,65 @@ Invokes the `skill-merger` agent for LLM-powered semantic merging.
 /slm-clean --duplicates      # Review and disable duplicate skills
 ```
 
+## Usage Example
+
+A typical workflow after installation:
+
+```
+# 1. First run — initialize registry and check health
+/slm-status
+#    → Scans ~/.claude/skills/, finds 101 skills
+#    → Detects 3 likely duplicate pairs
+#    → Shows category breakdown
+
+# 2. Investigate duplicates
+/slm-list --category development
+#    → Lists all development skills with source and version
+
+# 3. Merge similar skills
+/slm-merge finish-release start-release
+#    → skill-merger agent analyzes both skills
+#    → Generates merged preview for your confirmation
+#    → Backs up originals, creates merged skill
+
+# 4. Search for new skills
+/slm-search "tdd"
+#    → Local: 2 matches
+#    → GitHub: 5 repositories found
+
+# 5. Install one from GitHub
+/slm-install https://github.com/user/claude-tdd-pro
+#    → Clones, installs to ~/.claude/skills/, registers in registry
+
+# 6. Later — check for updates
+/slm-update --all
+#    → Compares commit SHAs, shows available updates
+#    → Backs up old version before applying
+
+# 7. Clean up unused skills
+/slm-clean unused-skill
+#    → Moves to ~/.claude/skills-disabled/ (recoverable)
+```
+
+You can also use the scripts directly without Claude Code:
+
+```bash
+# Bootstrap — scan and build registry
+python3 scripts/bootstrap.py --skills-dir ~/.claude/skills
+
+# View registry stats
+python3 scripts/registry.py stats
+
+# Find duplicates
+python3 scripts/similarity.py --skills-dir ~/.claude/skills --threshold 0.5
+
+# Search locally
+python3 scripts/search.py "git" --local-only
+
+# Install from GitHub
+bash scripts/install.sh https://github.com/user/skill-repo
+```
+
 ## Architecture
 
 ```
