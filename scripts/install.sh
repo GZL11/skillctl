@@ -24,6 +24,11 @@ if [[ -z "$GITHUB_URL" ]]; then
     exit 1
 fi
 
+if [[ ! "$GITHUB_URL" =~ ^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/?$ ]]; then
+    echo "Error: URL must be a GitHub repository URL (https://github.com/user/repo)"
+    exit 1
+fi
+
 # Extract repo name
 REPO_NAME=$(basename "$GITHUB_URL" .git)
 
@@ -32,7 +37,11 @@ TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
 echo "Cloning $GITHUB_URL..."
-git clone --depth 1 "$GITHUB_URL" "$TEMP_DIR/$REPO_NAME" 2>/dev/null
+CLONE_OUTPUT=$(git clone --depth 1 "$GITHUB_URL" "$TEMP_DIR/$REPO_NAME" 2>&1) || {
+    echo "Error: Failed to clone repository"
+    echo "$CLONE_OUTPUT"
+    exit 1
+}
 
 # Find SKILL.md files
 SKILL_FILES=$(find "$TEMP_DIR/$REPO_NAME" -name "SKILL.md" -type f)
@@ -60,16 +69,30 @@ while IFS= read -r skill_file; do
     fi
 
     echo "Installing skill: $SKILL_NAME -> $TARGET_DIR"
-    cp -r "$SKILL_DIR" "$TARGET_DIR"
+
+    # If SKILL.md is in repo root, selectively copy only skill-related files
+    if [[ "$SKILL_DIR" == "$TEMP_DIR/$REPO_NAME" ]]; then
+        mkdir -p "$TARGET_DIR"
+        cp "$SKILL_DIR/SKILL.md" "$TARGET_DIR/"
+        for subdir in references scripts assets; do
+            if [[ -d "$SKILL_DIR/$subdir" ]]; then
+                cp -r "$SKILL_DIR/$subdir" "$TARGET_DIR/"
+            fi
+        done
+    else
+        cp -r "$SKILL_DIR" "$TARGET_DIR"
+    fi
 
     # Get commit SHA
     COMMIT_SHA=$(git -C "$TEMP_DIR/$REPO_NAME" rev-parse HEAD)
 
     # Register in registry
     if [[ -f "$REGISTRY_SCRIPT" ]]; then
+        ORIGIN=$(echo "$GITHUB_URL" | sed -E 's|https://github.com/([^/]+)/.*|\1|')
         python3 "$REGISTRY_SCRIPT" add "$SKILL_NAME" \
             --install-path "$TARGET_DIR" \
             --source-type github \
+            --origin "$ORIGIN" \
             --github-url "$GITHUB_URL" \
             --commit-sha "$COMMIT_SHA"
     fi

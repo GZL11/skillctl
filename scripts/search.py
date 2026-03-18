@@ -80,14 +80,15 @@ def search_local(registry_path: str, keyword: str) -> List[Dict[str, Any]]:
         ).lower()
 
         if pattern in searchable:
+            source = entry.get("source", {})
             results.append(
                 {
                     "name": name,
                     "description": entry.get("description", ""),
                     "tags": entry.get("tags", []),
                     "install_path": entry.get("install_path", ""),
-                    "source_type": entry.get("source_type", "local"),
-                    "url": entry.get("github_url", ""),
+                    "source_type": source.get("type", "local"),
+                    "url": source.get("github_url", ""),
                     "match_type": "local",
                 }
             )

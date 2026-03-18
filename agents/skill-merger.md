@@ -80,4 +80,4 @@ Present the merged result as:
 3. Diff summary showing what came from which original skill
 4. Any conflicts requiring user decision
 
-Always ask for explicit user confirmation before writing any files. Create backups of both originals in `~/.claude/skills/backup/` before making changes.
+Always ask for explicit user confirmation before writing any files. Create backups of both originals in `~/.claude/skillctl-backup/` before making changes.

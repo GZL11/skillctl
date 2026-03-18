@@ -32,7 +32,7 @@ Merge two similar or duplicate skills into a single, stronger skill.
    - Ask for explicit confirmation
 
 6. **Execute Merge**
-   - Back up both originals to `~/.claude/skills/backup/`
+   - Back up both originals to `~/.claude/skillctl-backup/`
    - Create the merged skill directory
    - Update registry (add merged, remove originals)
    - Confirm completion

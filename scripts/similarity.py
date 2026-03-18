@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Multi-signal similarity detection for Claude Code skills.
 
 Combines four signals for robust duplicate detection:

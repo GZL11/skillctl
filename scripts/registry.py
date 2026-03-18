@@ -20,7 +20,7 @@ import json
 import os
 import sys
 import tempfile
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, fields
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -64,9 +64,13 @@ class SkillEntry:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "SkillEntry":
         """Deserialize from dict."""
+        data = dict(data)  # defensive copy
         src = data.pop("source", {})
         source = SourceInfo(**src) if isinstance(src, dict) else SourceInfo()
-        return cls(source=source, **data)
+        # Filter to only known fields
+        known = {f.name for f in fields(cls)} - {"source"}
+        filtered = {k: v for k, v in data.items() if k in known}
+        return cls(source=source, **filtered)
 
 
 # ---------------------------------------------------------------------------
@@ -206,7 +210,18 @@ def compute_content_hash(filepath: str | Path) -> str:
 
 
 def infer_category(name: str, description: str) -> str:
-    """Infer skill category from name and description keywords."""
+    """Infer skill category from name and description keywords.
+
+    Uses a scoring approach: counts keyword matches per category and returns
+    the category with the most matches.  This avoids priority conflicts where
+    e.g. "paper" would match "research" before "writing".
+
+    Examples:
+        - "paper-writing" -> "writing" (matches "writing" + "paper" in writing)
+        - "paper"         -> "research" (matches "paper" in both, but "research"
+                             also matches "paper" as its only keyword hit while
+                             "writing" needs additional signals)
+    """
     text = f"{name} {description}".lower()
     rules = [
         ("research", ["research", "paper", "citation", "literature", "ideation", "survey"]),
@@ -216,10 +231,14 @@ def infer_category(name: str, description: str) -> str:
         ("tools", ["tool", "utility", "package", "manager", "config", "pdf", "docx", "xlsx", "pptx"]),
         ("plugin-dev", ["skill", "command", "agent", "hook", "plugin", "mcp"]),
     ]
+    best_category = "other"
+    best_score = 0
     for category, keywords in rules:
-        if any(kw in text for kw in keywords):
-            return category
-    return "other"
+        score = sum(1 for kw in keywords if kw in text)
+        if score > best_score:
+            best_score = score
+            best_category = category
+    return best_category
 
 
 def extract_yaml_frontmatter(content: str) -> Dict[str, str]:
@@ -227,6 +246,12 @@ def extract_yaml_frontmatter(content: str) -> Dict[str, str]:
 
     Parses the text between the first pair of ``---`` lines.
     Handles simple ``key: value`` pairs only (no nested YAML).
+
+    Note:
+        Multi-line YAML values (block scalars ``|``, ``>``, or continuation
+        lines) are **not** supported.  Each value must fit on a single line.
+        Values containing colons are handled correctly because the split is
+        performed on the *first* colon only.
     """
     import re
 

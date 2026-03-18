@@ -65,7 +65,7 @@ Before applying the merge:
 
 ### Step 7: Execution
 
-1. Create backup of both original skills in `~/.claude/skills/backup/`
+1. Create backup of both original skills in `~/.claude/skillctl-backup/`
 2. Create the merged skill directory
 3. Write merged SKILL.md and copy resources
 4. Update registry: add merged entry, remove original entries

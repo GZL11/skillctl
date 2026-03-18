@@ -5,7 +5,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="${SKILLS_DIR:-$HOME/.claude/skills}"
-BACKUP_DIR="${SKILLS_DIR}/backup"
+BACKUP_DIR="${HOME}/.claude/skillctl-backup"
 REGISTRY_SCRIPT="${SCRIPT_DIR}/registry.py"
 REGISTRY_PATH="${SCRIPT_DIR}/../data/registry.json"
 
@@ -49,12 +49,15 @@ update_skill() {
     echo "    Current: ${current_sha:0:8}"
     echo "    Latest:  ${latest_sha:0:8}"
 
-    if [[ "$FORCE" != "true" ]]; then
+    if [[ "$FORCE" != "true" ]] && [[ -t 0 ]]; then
         read -r -p "  Update $name? [y/N] " response
         if [[ ! "$response" =~ ^[Yy]$ ]]; then
             echo "  Skipped."
             return 0
         fi
+    elif [[ "$FORCE" != "true" ]]; then
+        echo "  Non-interactive mode: use --force to auto-confirm"
+        return 0
     fi
 
     # Backup
@@ -67,7 +70,10 @@ update_skill() {
     # Clone and update
     local temp_dir
     temp_dir=$(mktemp -d)
-    trap 'rm -rf "$temp_dir"' RETURN
+
+    cleanup_temp() {
+        rm -rf "$temp_dir"
+    }
 
     git clone --depth 1 "$github_url" "$temp_dir/repo" 2>/dev/null
 
@@ -80,6 +86,7 @@ update_skill() {
 
     if [[ -z "$skill_md" ]]; then
         echo "  Error: SKILL.md not found in updated repo"
+        cleanup_temp
         return 1
     fi
 
@@ -97,6 +104,7 @@ update_skill() {
     fi
 
     echo "  Updated: $name (${current_sha:0:8} -> ${latest_sha:0:8})"
+    cleanup_temp
 }
 
 # Get skills to update from registry
@@ -110,15 +118,18 @@ echo "Checking for updates..."
 
 if [[ "$UPDATE_ALL" == "true" ]] || [[ -n "$SKILL_NAME" ]]; then
     # Parse registry JSON to find github-sourced skills
-    python3 -c "
-import json, sys
-with open('$REGISTRY_PATH') as f:
+    REGISTRY_PATH="$REGISTRY_PATH" SKILL_NAME="$SKILL_NAME" UPDATE_ALL="$UPDATE_ALL" python3 -c "
+import json, os, sys
+registry_path = os.environ['REGISTRY_PATH']
+skill_name = os.environ['SKILL_NAME']
+update_all = os.environ['UPDATE_ALL']
+with open(registry_path) as f:
     reg = json.load(f)
 skills = reg.get('skills', {})
 for name, info in skills.items():
     src = info.get('source', {})
     if src.get('type') == 'github' and src.get('github_url'):
-        if '$UPDATE_ALL' == 'true' or name == '$SKILL_NAME':
+        if update_all == 'true' or name == skill_name:
             sha = src.get('commit_sha', '')
             url = src.get('github_url', '')
             path = info.get('install_path', '')
