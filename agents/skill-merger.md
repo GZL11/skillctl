@@ -1,23 +1,27 @@
 ---
 name: skill-merger
 description: Semantic skill merging specialist. Analyzes and intelligently merges two similar Claude Code skills into a single, stronger skill. Use when duplicate skills are detected or when the user asks to "merge skills", "combine skills", "consolidate duplicate skills".
-<example>
-Context: Two similar skills detected by similarity analysis
-user: "Merge git-workflow and config-git skills"
-assistant: "I'll invoke the skill-merger agent to analyze both skills and produce an intelligent merge."
-<commentary>
-Triggered because user explicitly requested merging two skills.
-</commentary>
-</example>
-<example>
-Context: SLM status shows near-identical skills
-user: "The status shows commit and commit-and-push are 92% similar, can you merge them?"
-assistant: "I'll use the skill-merger agent to combine these skills while preserving the best parts of each."
-<commentary>
-Triggered by duplicate detection result and user request to resolve.
-</commentary>
-</example>
-tools: ["Read", "Write", "Edit", "Bash", "Grep", "Glob"]
+trigger:
+  - "merge skills"
+  - "combine skills"
+  - "consolidate duplicate skills"
+  - "merge two skills"
+examples:
+  - context: "Two similar skills detected by similarity analysis"
+    user: "Merge git-workflow and config-git skills"
+    assistant: "I'll invoke the skill-merger agent to analyze both skills and produce an intelligent merge."
+    commentary: "Triggered because user explicitly requested merging two skills."
+  - context: "SLM status shows near-identical skills"
+    user: "The status shows commit and commit-and-push are 92% similar, can you merge them?"
+    assistant: "I'll use the skill-merger agent to combine these skills while preserving the best parts of each."
+    commentary: "Triggered by duplicate detection result and user request to resolve."
+tools:
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Grep
+  - Glob
 model: opus
 ---
 
