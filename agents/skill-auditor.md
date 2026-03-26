@@ -1,23 +1,26 @@
 ---
 name: skill-auditor
 description: Skill quality auditor and registry health checker. Performs comprehensive audits of installed skills, detects duplicates, checks quality, and generates health reports. Use when the user asks to "audit skills", "check skill quality", "find duplicate skills", "run skill health check".
-<example>
-Context: User wants to review overall skill health
-user: "Audit my installed skills"
-assistant: "I'll invoke the skill-auditor agent to run a comprehensive audit of all installed skills."
-<commentary>
-Triggered by audit request covering quality, duplicates, and health.
-</commentary>
-</example>
-<example>
-Context: After installing new skills
-user: "Check if there are any duplicate or low-quality skills"
-assistant: "I'll use the skill-auditor to scan for duplicates and quality issues."
-<commentary>
-Triggered by quality and duplicate check request.
-</commentary>
-</example>
-tools: ["Read", "Bash", "Grep", "Glob"]
+trigger:
+  - "audit skills"
+  - "check skill quality"
+  - "find duplicate skills"
+  - "run skill health check"
+  - "skill health"
+examples:
+  - context: "User wants to review overall skill health"
+    user: "Audit my installed skills"
+    assistant: "I'll invoke the skill-auditor agent to run a comprehensive audit of all installed skills."
+    commentary: "Triggered by audit request covering quality, duplicates, and health."
+  - context: "After installing new skills"
+    user: "Check if there are any duplicate or low-quality skills"
+    assistant: "I'll use the skill-auditor to scan for duplicates and quality issues."
+    commentary: "Triggered by quality and duplicate check request."
+tools:
+  - Read
+  - Bash
+  - Grep
+  - Glob
 model: opus
 ---
 
